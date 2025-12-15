@@ -1,0 +1,13 @@
+# C++
+*.o
+*.out
+cpp_part/wallet_app
+.DS_Store
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# VS Code settings
+.vscode/
