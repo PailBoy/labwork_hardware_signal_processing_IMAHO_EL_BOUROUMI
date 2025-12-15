@@ -25,3 +25,28 @@ It is difficult to solve with the simple architecture because the debit thread n
 We use the virtual methods to validate the transaction immediately for the user (UI), and then we launch the slow physical counting in a background thread so it does not block the program.
 [cite_start]**Persisting problems:** [cite: 43]
 Even with the virtual wallet, the physical threads can still desynchronize if the debit tries to run before the credit thread has physically added the coins. I solved this by adding a loop in the debit function that waits for the physical funds to arrive before proceeding.
+
+
+## Part 2: Vectorizing Maps in PyTorch
+
+### 2.1 & 2.2 Optimization & Benchmark
+**Strategy:**
+I implemented the four required operations (Vectorize, Devectorize, Matrix Square Root, Matrix Logarithm) using PyTorch. To optimize performance, I avoided Python loops and used batch processing (tensor operations) which allows computing thousands of matrices simultaneously.
+
+**Performance Results (on Apple M2 Silicon):**
+* **Naive approach (For-loop):** ~0.43 seconds
+* **Optimized approach (Vectorized):** ~0.026 seconds
+* **Speedup:** ~16x faster
+This confirms that vectorization is crucial for performance in deep learning frameworks.
+
+*Note: On the Mac M2, I implemented a fallback to CPU for `linalg.eigh` as it is not yet fully supported on MPS (Metal Performance Shaders).*
+
+## Part 3: Measures of Performance (FLOPS)
+
+**Methodology:**
+I calculated the FLOPS (Floating Point Operations Per Second) for a standard Convolutional block (Conv2d) using two methods:
+1.  **Theoretical:** Using the standard formula $2 \times K^2 \times C_{in} \times C_{out} \times H \times W$.
+2.  **Automatic:** Using the `thop` library to profile the code.
+
+**Results:**
+Both methods gave exactly **150.99 MFLOPs**, showing that the theoretical model perfectly matches the actual operations performed by the code.
