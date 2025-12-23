@@ -20,3 +20,14 @@ L'approche du portefeuille instantané sépare la logique comptable de la repré
 Pour évaluer l'efficacité de la vectorisation, nous avons comparé deux implémentations du logarithme matriciel sur un lot de 1000 matrices SPD de taille 20x20. La première approche, dite "naïve", traite les matrices séquentiellement via une boucle, tandis que la seconde exploite les dimensions de batch de Pytorch pour traiter l'ensemble simultanément.
 
 Les tests effectués sur une architecture Mac montrent une différence drastique. La version naïve s'exécute en 0.77 seconde, contre seulement 0.036 seconde pour la version vectorisée. Nous obtenons ainsi un facteur d'accélération (speedup) supérieur à 21. Ce résultat illustre que l'overhead de l'interpréteur Python dans les boucles est extrêmement coûteux et que la parallélisation des opérations matricielles est indispensable pour le calcul haute performance, même en tenant compte des contraintes de transfert mémoire spécifiques au backend MPS.
+
+## Partie 3 : Mesures de performance (FLOPS)
+
+### 3.1 & 3.2 Calculs et Mesures
+Nous avons estimé la complexité théorique du modèle `SimpleMLP` (2 opérations par poids) et mesuré sa performance réelle sur GPU (Apple Silicon MPS) avec un batch de 10 000 échantillons.
+
+* **Complexité théorique :** 56 592 FLOPS par échantillon.
+* **Temps d'exécution :** 0.0005 seconde par batch.
+* **Performance mesurée :** 1244 GFLOPS (1.2 TFLOPS).
+
+Ce résultat démontre l'efficacité massive du parallélisme sur GPU pour les larges batchs, rendant le coût d'inférence négligeable.
