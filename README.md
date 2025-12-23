@@ -1,7 +1,5 @@
 # Labwork Hardware for Signal Processing - Compte rendu
 
-Ce fichier résume les réponses aux questions posées lors du développement du système de portefeuille multi-threadé.
-
 ## Partie 1 : C++ Multi-threading
 
 ### 1.2 Version séquentielle
