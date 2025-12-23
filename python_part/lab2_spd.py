@@ -16,10 +16,8 @@ def devectorize(v, dim):
     M_diag = M * mask_diag
     return M + M.transpose(-2, -1) - M_diag
 
-# Helper pour valeurs propres (Version Robuste Mac M1/M2)
 def get_eigen(M):
     # Si on est sur MPS (Mac GPU), on passe temporairement sur CPU
-    # car linalg.eigh n'est pas encore implémenté sur MPS
     if M.device.type == 'mps':
         vals, vecs = torch.linalg.eigh(M.cpu())
         return vals.to(M.device), vecs.to(M.device)
