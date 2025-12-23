@@ -13,3 +13,10 @@ Si le Mutex a corrigé la corruption des données, il n'a pas résolu le problè
 
 ### 1.5 Portefeuille instantané
 L'approche du portefeuille instantané sépare la logique comptable de la représentation physique. Nous utilisons les méthodes virtuelles pour garantir et valider la transaction instantanément auprès de l'utilisateur, ce qui évite les refus de paiement injustifiés. Ces méthodes lancent ensuite les fonctions physiques (debit/credit) dans des threads séparés pour l'aspect visuel. Le problème de synchronisation physique persiste néanmoins : pour éviter que le compteur physique ne tombe dans le négatif ou ne refuse le débit, j'ai dû implémenter une boucle d'attente dans la fonction de débit physique qui patiente jusqu'à ce que les fonds soient réellement arrivés.
+
+## Partie 2 : Vectorisation avec Pytorch
+
+### 2.2 et 2.3 Optimisation et Benchmark
+Pour évaluer l'efficacité de la vectorisation, nous avons comparé deux implémentations du logarithme matriciel sur un lot de 1000 matrices SPD de taille 20x20. La première approche, dite "naïve", traite les matrices séquentiellement via une boucle, tandis que la seconde exploite les dimensions de batch de Pytorch pour traiter l'ensemble simultanément.
+
+Les tests effectués sur une architecture Mac montrent une différence drastique. La version naïve s'exécute en 0.77 seconde, contre seulement 0.036 seconde pour la version vectorisée. Nous obtenons ainsi un facteur d'accélération (speedup) supérieur à 21. Ce résultat illustre que l'overhead de l'interpréteur Python dans les boucles est extrêmement coûteux et que la parallélisation des opérations matricielles est indispensable pour le calcul haute performance, même en tenant compte des contraintes de transfert mémoire spécifiques au backend MPS.
