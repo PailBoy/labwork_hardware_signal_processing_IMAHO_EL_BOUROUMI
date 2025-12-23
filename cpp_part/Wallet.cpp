@@ -4,8 +4,6 @@
 
 Wallet::Wallet() : rupees(0), virtual_rupees(0) {}
 
-// Le destructeur attend que tous les threads aient fini avant de quitter
-// C'est ça qui va empêcher ton "Segmentation Fault" !
 Wallet::~Wallet() {
     for (std::thread &t : workers) {
         if (t.joinable()) {
@@ -37,7 +35,7 @@ void Wallet::debit(unsigned int val) {
                 if (rupees > 0) {
                     rupees--;
                     std::cout << "   [PHYSIQUE] -1 (Reel: " << rupees << ")" << std::endl;
-                    paye = true; // C'est bon, on peut passer au suivant
+                    paye = true; 
                 }
             }
             
@@ -52,7 +50,7 @@ void Wallet::debit(unsigned int val) {
     }
 }
 
-// --- PARTIE VIRTUELLE (Instantanée) ---
+// --- PARTIE VIRTUELLE (rapide) ---
 bool Wallet::virtual_credit(unsigned int val) {
     {
         std::lock_guard<std::mutex> lock(virtualMutex);
@@ -77,7 +75,6 @@ bool Wallet::virtual_debit(unsigned int val) {
 }
 
 unsigned int Wallet::balance() {
-    // On renvoie le solde virtuel comme demandé
     std::lock_guard<std::mutex> lock(virtualMutex);
     return virtual_rupees;
 }

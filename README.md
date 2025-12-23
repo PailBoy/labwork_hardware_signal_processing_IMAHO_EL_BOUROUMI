@@ -1,52 +1,17 @@
-# Labwork Hardware for Signal Processing
+# Labwork Hardware for Signal Processing - Compte rendu
 
-This repository contains the work for the multi-threading and performance optimization lab.
+Ce fichier résume les réponses aux questions posées lors du développement du système de portefeuille multi-threadé.
 
-## Part 1: C++ Multi-threading (The Wallet)
+## Partie 1 : C++ Multi-threading
 
-### 1.2 Sequential Version
-[cite_start]**Why parallelize?** [cite: 19]
-In a real video game or RPG, we cannot freeze the entire screen or stop the gameplay just to count coins. The addition of money must happen in the background while the player continues to play. That is why we need threads.
+### 1.2 Version séquentielle
+L'intérêt principal de la parallélisation dans ce contexte est de ne pas bloquer le programme principal. Dans un jeu vidéo réel, il est inconcevable de figer l'écran ou d'empêcher le joueur d'agir le temps que l'animation du comptage des pièces se termine. Le multi-threading permet donc de gérer ces transactions en arrière-plan tout en maintenant le jeu fluide.
 
-### 1.3 Parallel Payments
-[cite_start]**Problems encountered:** [cite: 22]
-When we ran the threads in parallel without protection, the console output was completely mixed up. More importantly, the final calculation was wrong (we got 91 instead of 50).
-[cite_start]**Solution:** [cite: 23]
-This was a race condition. Both threads were trying to modify the variable at the exact same time. The solution is to use a Mutex to protect the access to the shared variable.
+### 1.3 Paralléliser les paiements
+En lançant les threads sans protection, nous avons rencontré une "race condition" (concurrence critique). Les différents threads tentaient de lire et modifier la variable du solde simultanément, ce qui a causé un mélange des sorties dans la console et surtout un résultat final erroné. Pour résoudre cela, il est impératif d'utiliser un Mutex qui verrouille l'accès à la variable partagée, assurant qu'un seul thread peut la modifier à la fois.
 
-### 1.4 Mutex
-[cite_start]**Did it solve everything?** [cite: 26, 27]
-The mutex solved the data corruption and the display issues, but a logic problem remained. We ended up with a balance of 51 instead of 50. This happened because the debit thread checked the balance when it was still 0 (because the credit thread was sleeping) and decided to skip the payment.
-[cite_start]**Is it solvable?** [cite: 28]
-It is difficult to solve with the simple architecture because the debit thread needs to wait for the money to arrive physically, rather than just skipping the turn.
+### 1.4 Multi-threading et Mutex
+Si le Mutex a corrigé la corruption des données, il n'a pas résolu le problème de logique temporelle. Nous avons observé que le thread de débit pouvait s'exécuter alors que le thread de crédit n'avait pas encore fini d'ajouter "physiquement" les rubis (à cause des délais simulés). Le débit échouait donc par manque de fonds immédiats, même si le solde final devait être positif. Ce problème est difficilement solvable avec cette architecture simple car elle dépend trop de la vitesse d'exécution des threads physiques.
 
-### 1.5 Instant Wallet
-[cite_start]**Why call debit/credit from virtual methods?** [cite: 42]
-We use the virtual methods to validate the transaction immediately for the user (UI), and then we launch the slow physical counting in a background thread so it does not block the program.
-[cite_start]**Persisting problems:** [cite: 43]
-Even with the virtual wallet, the physical threads can still desynchronize if the debit tries to run before the credit thread has physically added the coins. I solved this by adding a loop in the debit function that waits for the physical funds to arrive before proceeding.
-
-
-## Part 2: Vectorizing Maps in PyTorch
-
-### 2.1 & 2.2 Optimization & Benchmark
-**Strategy:**
-I implemented the four required operations (Vectorize, Devectorize, Matrix Square Root, Matrix Logarithm) using PyTorch. To optimize performance, I avoided Python loops and used batch processing (tensor operations) which allows computing thousands of matrices simultaneously.
-
-**Performance Results (on Apple M2 Silicon):**
-* **Naive approach (For-loop):** ~0.43 seconds
-* **Optimized approach (Vectorized):** ~0.026 seconds
-* **Speedup:** ~16x faster
-This confirms that vectorization is crucial for performance in deep learning frameworks.
-
-*Note: On the Mac M2, I implemented a fallback to CPU for `linalg.eigh` as it is not yet fully supported on MPS (Metal Performance Shaders).*
-
-## Part 3: Measures of Performance (FLOPS)
-
-**Methodology:**
-I calculated the FLOPS (Floating Point Operations Per Second) for a standard Convolutional block (Conv2d) using two methods:
-1.  **Theoretical:** Using the standard formula $2 \times K^2 \times C_{in} \times C_{out} \times H \times W$.
-2.  **Automatic:** Using the `thop` library to profile the code.
-
-**Results:**
-Both methods gave exactly **150.99 MFLOPs**, showing that the theoretical model perfectly matches the actual operations performed by the code.
+### 1.5 Portefeuille instantané
+L'approche du portefeuille instantané sépare la logique comptable de la représentation physique. Nous utilisons les méthodes virtuelles pour garantir et valider la transaction instantanément auprès de l'utilisateur, ce qui évite les refus de paiement injustifiés. Ces méthodes lancent ensuite les fonctions physiques (debit/credit) dans des threads séparés pour l'aspect visuel. Le problème de synchronisation physique persiste néanmoins : pour éviter que le compteur physique ne tombe dans le négatif ou ne refuse le débit, j'ai dû implémenter une boucle d'attente dans la fonction de débit physique qui patiente jusqu'à ce que les fonds soient réellement arrivés.
